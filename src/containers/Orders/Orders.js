@@ -3,49 +3,39 @@ import Order from "../../components/CheckoutSummary/Order/Order";
 import axios from "../../hoc/axios-orders"
 import withErrorHandler from "../../hoc/withErrorHandler/withErrorHandler";
 import Spinner from "../../components/UI/Spinner/Spinner";
+import {connect} from "react-redux";
+import * as actions from '../../store/actions/index'
 
 class Orders extends Component {
-    state = {
-        loading: true,
-        orders: []
-    }
-
-    componentShouldUpdate() {
-
-    }
-
     componentDidMount() {
-        axios.get('/orders.json').then(response => {
-            const fetchedOrders = []
-            for (let key in response.data) {
-                fetchedOrders.push({
-                    ...response.data[key],
-                    id: key
-                })
-            }
-            console.log(fetchedOrders)
-            this.setState({loading: false, orders: fetchedOrders});
-
-        }).catch(err => {
-            this.setState({loading: false})
-            console.error(err);
-        })
+        this.props.onFetchOrders();
     }
 
-    ordersDisplay = this.state.orders.map(o => {
+    ordersDisplay = this.props.orders.map(o => {
         return <Order/>
     })
-    display = this.state.loading ? <Spinner/> : this.ordersDisplay;
+    display = this.props.loading ? <Spinner/> : this.ordersDisplay;
 
 
     render() {
 
         return (
             <div>
-                {this.state.orders.map(o => <Order key={o.id} ingredients={o.ingredients} price={+o.price}/>)}
+                {this.props.orders.map(o => <Order key={o.id} ingredients={o.ingredients} price={+o.price}/>)}
             </div>
         )
     }
 }
+const mapStateToProps = state => {
+    return {
+        loading: state.orders.loading,
+        orders: state.orders.orders
+    }
+}
+const mapDispatchToProps = dispatch => {
+    return {
+        onFetchOrders: () => dispatch(actions.fetchOrders())
+    }
+}
 
-export default withErrorHandler(Orders, axios);
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(Orders, axios));
